@@ -40,25 +40,43 @@ A Flutter breathing app offering three evidence-based techniques (box breathing,
 
 ```
 lib/
-├── main.dart                       # runApp, MaterialApp, theme
+├── main.dart                       # runApp, MaterialApp, theme (ThemeMode.dark — Night Tide is a dark design)
 ├── theme/
-│   └── app_theme.dart                # Material 3 theme (ColorScheme.fromSeed)
+│   └── app_theme.dart                # "Night Tide" Material 3 theme + NightTide ThemeExtension (aurora/glow tokens)
+├── motion/
+│   ├── motion.dart                   # shared durations/curves + Motion.reduced(context) for "reduce motion"
+│   ├── fade_rise.dart                # staggered fade+rise entrance used on every screen
+│   └── tide_route.dart               # fade+settle page transition (no slides)
 ├── models/
 │   ├── breathing_technique.dart        # BreathPhase, BreathPhaseType, the 3 fixed techniques
 │   └── context_preset.dart              # the 3 fixed situational presets
 ├── state/
 │   └── session_controller.dart           # ChangeNotifier: phase/timing logic, framework-agnostic (tick(deltaSeconds))
 ├── screens/
-│   ├── home_screen.dart                  # presets + technique/duration picker + Begin
-│   ├── session_screen.dart                # owns the real Ticker driving SessionController.tick; full-screen session UI
-│   └── settings_screen.dart                # sound/haptics toggles, purchase status, privacy statement
+│   ├── home_screen.dart                  # presets (fill the pickers) + technique/length pickers + Begin
+│   ├── session_screen.dart                # owns the real Ticker driving SessionController.tick; ring + plain-text phase label
+│   └── settings_screen.dart                # sound/haptics toggles, one-purchase statement, privacy statement
 └── widgets/
-    └── breathing_animation.dart            # Lottie-per-phase with the plain-circle fallback (golden rule 7)
+    ├── aurora_background.dart              # slow-drifting aurora blooms behind every screen
+    ├── breathing_animation.dart            # Lottie-per-phase; falls back to BreathingRing (golden rule 7)
+    ├── breathing_ring.dart                 # CustomPainter ring: disc swells with breath, progress arc, echo rings, glow
+    └── glow_button.dart                    # gradient primary / quiet secondary pill
+
+assets/
+├── animations/                     # empty until real Lottie compositions exist (golden rule 7)
+└── fonts/                          # Geist (OFL) — bundled, never fetched (golden rule 4)
 
 test/
 ├── session_controller_test.dart    # phase advancement, pause/resume, completion, reset
-└── breathing_technique_test.dart    # cycle-length and label sanity checks
+├── breathing_technique_test.dart    # cycle-length and label sanity checks
+├── breathing_ring_test.dart         # breathScale: monotonic, continuous across phase boundaries
+└── session_screen_test.dart         # phase label is plain text; pause/resume; completion state
+
+integration_test/screens_test.dart  # Home → Session → Settings on a simulator, screenshots to build/screenshots/
 ```
+
+- **Visual direction: "Night Tide"** (chosen 13 Sep 2026 from five Pencil directions). Dark-first, `#0D1320` ground, sea-glass accent `#7FD1C4`, aurora blooms, Geist. `ThemeMode.dark` is forced; the light theme exists only so nothing breaks if that's ever revisited.
+- **Motion is Flutter-native, not Lottie.** The breathing ring, aurora, entrances and route transition are all drawn/animated in Dart. Lottie remains the per-phase artwork slot (golden rule 7). Every decorative animation checks `Motion.reduced(context)`.
 
 - **`SessionController` never imports Flutter's animation/Ticker APIs.** It exposes `tick(double deltaSeconds)` so it's driven identically by `SessionScreen`'s real `Ticker` or by a plain unit test — mirrors the existing Flutter project's `SimulationController` pattern. Don't fold Ticker logic into the controller.
 - **`BreathingAnimation` is the only place a Lottie asset is loaded.** Screens never call `Lottie.asset` directly.

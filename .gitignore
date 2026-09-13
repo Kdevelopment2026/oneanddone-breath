@@ -18,3 +18,14 @@ android/local.properties
 # macOS
 .DS_Store
 commit_stderr.log.stale
+
+# fastlane — the API key descriptor and build outputs never get committed.
+fastlane/api_key.json
+fastlane/report.xml
+fastlane/README.md
+fastlane/test_output/
+fastlane/.review_information.parked/
+
+# Local scratch
+_to_delete/
+.idea/

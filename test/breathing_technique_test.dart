@@ -14,7 +14,8 @@ void main() {
     test('coherent breathing has no hold phases', () {
       final hasHold = BreathingTechnique.coherent.phases.any(
         (phase) =>
-            phase.type == BreathPhaseType.holdAfterInhale || phase.type == BreathPhaseType.holdAfterExhale,
+            phase.type == BreathPhaseType.holdAfterInhale ||
+            phase.type == BreathPhaseType.holdAfterExhale,
       );
       expect(hasHold, isFalse);
     });

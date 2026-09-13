@@ -5,19 +5,26 @@ import 'package:one_and_done_breath/state/session_controller.dart';
 void main() {
   group('SessionController', () {
     test('starts in ready state and does not advance until started', () {
-      final controller = SessionController(technique: BreathingTechnique.box, totalMinutes: 1);
+      final controller = SessionController(
+        technique: BreathingTechnique.box,
+        totalMinutes: 1,
+      );
       controller.tick(2);
       expect(controller.state, SessionState.ready);
       expect(controller.elapsedSeconds, 0);
     });
 
     test('advances through phases in order', () {
-      final controller = SessionController(technique: BreathingTechnique.box, totalMinutes: 1)
-        ..start();
+      final controller = SessionController(
+        technique: BreathingTechnique.box,
+        totalMinutes: 1,
+      )..start();
 
       expect(controller.currentPhase.type, BreathPhaseType.inhale);
 
-      controller.tick(4); // box: inhale is 4s, should roll into hold-after-inhale
+      controller.tick(
+        4,
+      ); // box: inhale is 4s, should roll into hold-after-inhale
       expect(controller.currentPhase.type, BreathPhaseType.holdAfterInhale);
 
       controller.tick(4);
@@ -32,8 +39,10 @@ void main() {
     });
 
     test('completes when total duration is reached', () {
-      final controller = SessionController(technique: BreathingTechnique.coherent, totalMinutes: 1)
-        ..start();
+      final controller = SessionController(
+        technique: BreathingTechnique.coherent,
+        totalMinutes: 1,
+      )..start();
 
       controller.tick(59);
       expect(controller.state, SessionState.running);
@@ -44,8 +53,10 @@ void main() {
     });
 
     test('pause stops phase advancement until resumed', () {
-      final controller = SessionController(technique: BreathingTechnique.box, totalMinutes: 1)
-        ..start();
+      final controller = SessionController(
+        technique: BreathingTechnique.box,
+        totalMinutes: 1,
+      )..start();
 
       controller.tick(2);
       controller.pause();
@@ -61,12 +72,32 @@ void main() {
       expect(controller.elapsedSeconds, greaterThan(elapsedBeforePause));
     });
 
+    test(
+      'ignores negative and NaN deltas so a restarted ticker cannot rewind',
+      () {
+        final controller = SessionController(
+          technique: BreathingTechnique.box,
+          totalMinutes: 1,
+        )..start();
+        controller.tick(3);
+        controller.tick(-2.5);
+        controller.tick(double.nan);
+        expect(controller.elapsedSeconds, 3);
+        expect(controller.currentPhase.type, BreathPhaseType.inhale);
+      },
+    );
+
     test('reset returns to ready with a fresh technique/duration', () {
-      final controller = SessionController(technique: BreathingTechnique.box, totalMinutes: 1)
-        ..start();
+      final controller = SessionController(
+        technique: BreathingTechnique.box,
+        totalMinutes: 1,
+      )..start();
       controller.tick(10);
 
-      controller.reset(technique: BreathingTechnique.fourSevenEight, totalMinutes: 5);
+      controller.reset(
+        technique: BreathingTechnique.fourSevenEight,
+        totalMinutes: 5,
+      );
 
       expect(controller.state, SessionState.ready);
       expect(controller.technique, BreathingTechnique.fourSevenEight);

@@ -39,21 +39,27 @@ class BreathingTechnique {
   const BreathingTechnique({
     required this.id,
     required this.name,
+    required this.shortName,
     required this.description,
     required this.phases,
   });
 
   final String id;
   final String name;
+
+  /// One or two words for tight spaces (segmented picker, preset meta).
+  final String shortName;
   final String description;
   final List<BreathPhase> phases;
 
   /// Total seconds for one full cycle through [phases].
-  double get cycleSeconds => phases.fold(0, (sum, phase) => sum + phase.seconds);
+  double get cycleSeconds =>
+      phases.fold(0, (sum, phase) => sum + phase.seconds);
 
   static const box = BreathingTechnique(
     id: 'box',
     name: 'Box breathing',
+    shortName: 'Box',
     description: 'Four equal steps — in, hold, out, hold. A steady, general-purpose reset.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 4),
@@ -66,6 +72,7 @@ class BreathingTechnique {
   static const fourSevenEight = BreathingTechnique(
     id: 'four_seven_eight',
     name: '4-7-8 breathing',
+    shortName: '4-7-8',
     description: 'A longer hold and a slow exhale — popularised for winding down before sleep.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 4),
@@ -77,6 +84,7 @@ class BreathingTechnique {
   static const coherent = BreathingTechnique(
     id: 'coherent',
     name: 'Coherent breathing',
+    shortName: 'Coherent',
     description: 'Even, unhurried in-and-out with no holds — the simplest place to start.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 5.5),

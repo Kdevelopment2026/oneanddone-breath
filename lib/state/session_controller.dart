@@ -14,8 +14,8 @@ class SessionController extends ChangeNotifier {
   SessionController({
     required BreathingTechnique technique,
     required int totalMinutes,
-  })  : _technique = technique,
-        _totalSeconds = totalMinutes * 60;
+  }) : _technique = technique, // ignore: prefer_initializing_formals
+       _totalSeconds = totalMinutes * 60;
 
   BreathingTechnique _technique;
   double _totalSeconds;
@@ -29,14 +29,19 @@ class SessionController extends ChangeNotifier {
   double get totalSeconds => _totalSeconds;
   SessionState get state => _state;
   double get elapsedSeconds => _elapsedSeconds;
-  double get remainingSeconds => (_totalSeconds - _elapsedSeconds).clamp(0, _totalSeconds);
+  double get remainingSeconds =>
+      (_totalSeconds - _elapsedSeconds).clamp(0, _totalSeconds);
 
   BreathPhase get currentPhase => _technique.phases[_phaseIndex];
+
+  /// Index of [currentPhase] within the technique's cycle.
+  int get phaseIndex => _phaseIndex;
   double get phaseElapsedSeconds => _phaseElapsedSeconds;
 
   /// 0.0–1.0 progress through the current phase, for driving the animation.
-  double get phaseProgress =>
-      currentPhase.seconds == 0 ? 1 : (_phaseElapsedSeconds / currentPhase.seconds).clamp(0, 1);
+  double get phaseProgress => currentPhase.seconds == 0
+      ? 1
+      : (_phaseElapsedSeconds / currentPhase.seconds).clamp(0, 1);
 
   void start() {
     if (_state == SessionState.running) return;
@@ -63,6 +68,9 @@ class SessionController extends ChangeNotifier {
   /// Advances the session by [deltaSeconds]. No-ops unless running.
   void tick(double deltaSeconds) {
     if (_state != SessionState.running) return;
+    // A restarted Ticker reports elapsed time from zero again; a negative
+    // or NaN delta must never wind the session backwards.
+    if (deltaSeconds.isNaN || deltaSeconds <= 0) return;
 
     _elapsedSeconds += deltaSeconds;
     _phaseElapsedSeconds += deltaSeconds;

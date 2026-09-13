@@ -13,6 +13,9 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   lottie: ^3.5.1
+  wakelock_plus: ^1.8.0
+  shared_preferences: ^2.5.5
+  audioplayers: ^6.8.1
 
 dev_dependencies:
   flutter_test:
@@ -20,9 +23,36 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   integration_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/animations/
+    - assets/audio/chime.wav
+
+  # Geist (OFL, see assets/fonts/OFL-Geist.txt) is bundled rather than
+  # fetched at runtime — the app makes zero network calls (CLAUDE.md, golden
+  # rule 4), so a fonts package that downloads on first launch is out.
+  fonts:
+    - family: Geist
+      fonts:
+        - asset: assets/fonts/Geist-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Geist-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Geist-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Geist-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Geist-SemiBold.ttf
+          weight: 600
+
+# `dart run flutter_launcher_icons` — regenerates ios/ (and android/) icon
+# sets from the single source PNG rendered by tool/make_icon.py.
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon.png"
+  ios: true
+  remove_alpha_ios: true
+  android: true
