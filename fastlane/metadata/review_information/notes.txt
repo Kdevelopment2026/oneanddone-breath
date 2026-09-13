@@ -1,0 +1,5 @@
+OneAndDone Breath is a paid app with no sign-in and no in-app purchases, so there is nothing to log in to and no demo account. Everything is available immediately after launch.
+
+To test: on the home screen tap a preset (or pick a technique and length) and tap Begin. The session screen shows the breathing ring with "Breathe in / Hold / Breathe out" in text, a per-phase countdown, and Pause/Resume. The app's settings (top-right icon) hold two toggles: Sound and Haptics.
+
+The app makes no network requests and stores nothing except those two toggles. Privacy label: Data Not Collected.
