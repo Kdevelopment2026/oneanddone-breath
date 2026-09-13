@@ -397,10 +397,22 @@ platform :ios do
     UI.success("price set: USD #{wanted}")
   end
 
+  desc "Declare that the app uses no third-party content (App Review requires an answer)"
+  lane :content_rights do
+    require "spaceship"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    asc(:patch, "/v1/apps/#{app.id}", {
+      data: { type: "apps", id: app.id, attributes: { contentRightsDeclaration: "DOES_NOT_USE_THIRD_PARTY_CONTENT" } }
+    })
+    UI.success("content rights: does not use third-party content")
+  end
+
   desc "Submit the editable version for App Review (build attached, price and privacy label set first)"
   lane :submit do
     require "spaceship"
     authenticate
+    content_rights
     app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
     version = app.get_edit_app_store_version || UI.user_error!("No editable version")
     UI.user_error!("No build attached: run `fastlane ios attach_build` first") if version.build.nil?
@@ -417,6 +429,32 @@ platform :ios do
       }
     )
     UI.success("Submitted #{version.version_string} (build #{version.build.version}) for review")
+  end
+
+  desc "Why can't 1.0 be submitted? Prints the fields App Review needs that are still unset"
+  lane :readiness do
+    require "spaceship"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    a = asc(:get, "/v1/apps/#{app.id}")["data"]["attributes"]
+    UI.message("contentRightsDeclaration: #{a['contentRightsDeclaration'].inspect}")
+    UI.message("primaryLocale: #{a['primaryLocale'].inspect}")
+    usages = begin
+      asc(:get, "/v1/apps/#{app.id}/dataUsages?limit=200")["data"]
+    rescue StandardError
+      nil
+    end
+    UI.message("privacy label rows: #{usages ? usages.size : 'not readable via API'}")
+    infos = asc(:get, "/v1/apps/#{app.id}/appInfos?include=primaryCategory")["data"]
+    infos.each { |i| UI.message("appInfo #{i['id']}: #{i['attributes']['appStoreState']} / #{i['attributes']['state']} category=#{i.dig('relationships', 'primaryCategory', 'data', 'id').inspect}") }
+    v = asc(:get, "/v1/apps/#{app.id}/appStoreVersions?filter[platform]=IOS&include=build")["data"].first
+    UI.message("version #{v['attributes']['versionString']}: #{v['attributes']['appStoreState']} / #{v['attributes']['appVersionState']} build=#{v.dig('relationships', 'build', 'data', 'id').inspect} releaseType=#{v['attributes']['releaseType']}")
+    loc = asc(:get, "/v1/appStoreVersions/#{v['id']}/appStoreVersionLocalizations")["data"]
+    loc.each { |l| at = l["attributes"]; UI.message("#{at['locale']}: desc=#{at['description'].to_s.length} kw=#{at['keywords'].to_s.length} support=#{at['supportUrl'].inspect} promo=#{at['promotionalText'].to_s.length}") }
+    rc = asc(:get, "/v1/appStoreVersions/#{v['id']}/appStoreReviewDetail") rescue nil
+    UI.message("review contact: #{rc ? rc.dig('data', 'attributes')&.slice('contactFirstName', 'contactEmail', 'contactPhone').inspect : 'none'}")
+    ph = asc(:get, "/v1/appStoreVersions/#{v['id']}/appStoreVersionPhasedRelease") rescue nil
+    UI.message("phased release: #{ph ? ph.dig('data', 'attributes', 'phasedReleaseState').inspect : 'none'}")
   end
 
   desc "Read the listing back from App Store Connect"
