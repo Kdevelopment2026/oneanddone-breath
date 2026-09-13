@@ -408,6 +408,43 @@ platform :ios do
     UI.success("content rights: does not use third-party content")
   end
 
+  desc "Submit via the review-submission API directly and print Apple's associated errors if refused"
+  lane :submit_api do
+    require "spaceship"
+    require "net/http"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    v = asc(:get, "/v1/apps/#{app.id}/appStoreVersions?filter[platform]=IOS")["data"].first
+    existing = asc(:get, "/v1/apps/#{app.id}/reviewSubmissions?filter[state]=READY_FOR_REVIEW,WAITING_FOR_REVIEW,IN_REVIEW,UNRESOLVED_ISSUES")["data"]
+    sub = existing.first || asc(:post, "/v1/reviewSubmissions", {
+      data: { type: "reviewSubmissions", attributes: { platform: "IOS" },
+              relationships: { app: { data: { type: "apps", id: app.id } } } }
+    })["data"]
+    UI.message("review submission #{sub['id']} (#{sub.dig('attributes', 'state')})")
+    uri = URI("https://api.appstoreconnect.apple.com/v1/reviewSubmissionItems")
+    req = Net::HTTP::Post.new(uri)
+    req["Authorization"] = "Bearer #{asc_token}"
+    req["Content-Type"] = "application/json"
+    req.body = JSON.generate({ data: { type: "reviewSubmissionItems",
+      relationships: { reviewSubmission: { data: { type: "reviewSubmissions", id: sub["id"] } },
+                       appStoreVersion: { data: { type: "appStoreVersions", id: v["id"] } } } } })
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.request(req) }
+    body = JSON.parse(res.body) rescue {}
+    unless res.code.to_i.between?(200, 299)
+      (body["errors"] || []).each do |e|
+        UI.error("#{e['code']}: #{e['detail']}")
+        (e.dig("meta", "associatedErrors") || {}).each do |path, errs|
+          errs.each { |ae| UI.important("  #{path}: #{ae['detail']}") }
+        end
+      end
+      UI.user_error!("Apple refused the submission (see above)")
+    end
+    asc(:patch, "/v1/reviewSubmissions/#{sub['id']}", {
+      data: { type: "reviewSubmissions", id: sub["id"], attributes: { submitted: true } }
+    })
+    UI.success("Submitted #{v['attributes']['versionString']} for review")
+  end
+
   desc "Submit the editable version for App Review (build attached, price and privacy label set first)"
   lane :submit do
     require "spaceship"
@@ -455,6 +492,19 @@ platform :ios do
     UI.message("review contact: #{rc ? rc.dig('data', 'attributes')&.slice('contactFirstName', 'contactEmail', 'contactPhone').inspect : 'none'}")
     ph = asc(:get, "/v1/appStoreVersions/#{v['id']}/appStoreVersionPhasedRelease") rescue nil
     UI.message("phased release: #{ph ? ph.dig('data', 'attributes', 'phasedReleaseState').inspect : 'none'}")
+  end
+
+  desc "Dump raw appInfo and ageRatingDeclaration attributes (finding new required fields)"
+  lane :dump_info do
+    require "spaceship"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    info = asc(:get, "/v1/apps/#{app.id}/appInfos")["data"].first
+    UI.message("appInfo attrs: #{JSON.generate(info['attributes'])}")
+    UI.message("appInfo rels: #{info['relationships'].keys.join(', ')}")
+    ard = asc(:get, "/v1/appInfos/#{info['id']}/ageRatingDeclaration")["data"]
+    UI.message("ageRating attrs: #{JSON.generate(ard['attributes'])}")
+    UI.message("app attrs: #{JSON.generate(asc(:get, "/v1/apps/#{app.id}")['data']['attributes'])}")
   end
 
   desc "Read the listing back from App Store Connect"
