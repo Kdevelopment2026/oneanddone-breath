@@ -17,3 +17,4 @@ android/local.properties
 
 # macOS
 .DS_Store
+commit_stderr.log.stale
