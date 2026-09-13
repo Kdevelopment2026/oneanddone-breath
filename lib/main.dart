@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 import 'state/app_settings.dart';
 import 'theme/app_theme.dart';
 
@@ -26,7 +26,7 @@ class OneAndDoneBreathApp extends StatelessWidget {
       // Night Tide is a dark design; the light theme exists so nothing
       // breaks if this is ever switched to ThemeMode.system.
       themeMode: ThemeMode.dark,
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }

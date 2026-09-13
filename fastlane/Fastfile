@@ -20,7 +20,8 @@
 APP_BUNDLE_ID = "com.kayode.oneAndDoneBreath".freeze
 APP_NAME = ENV.fetch("OADB_APP_NAME", "OneAndDone Breath").freeze
 TEAM_ID = "SJW465977U".freeze
-API_KEY_PATH = File.join(__dir__, "api_key.json").freeze
+# ASC_API_KEY_JSON lets one key descriptor be shared across the portfolio.
+API_KEY_PATH = (ENV["ASC_API_KEY_JSON"] || File.join(__dir__, "api_key.json")).freeze
 ROOT = File.expand_path("..", __dir__).freeze
 WORKSPACE = File.join(ROOT, "ios", "Runner.xcworkspace").freeze
 SCHEME = "Runner".freeze

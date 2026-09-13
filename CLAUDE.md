@@ -51,8 +51,12 @@ lib/
 │   ├── breathing_technique.dart        # BreathPhase, BreathPhaseType, the 3 fixed techniques
 │   └── context_preset.dart              # the 3 fixed situational presets
 ├── state/
-│   └── session_controller.dart           # ChangeNotifier: phase/timing logic, framework-agnostic (tick(deltaSeconds))
+│   ├── session_controller.dart           # ChangeNotifier: phase/timing logic, framework-agnostic (tick(deltaSeconds))
+│   ├── app_settings.dart                 # sound/haptics/onboarding-seen, shared_preferences (local only)
+│   └── phase_feedback.dart               # chime (bundled WAV) + light haptic on phase change
 ├── screens/
+│   ├── splash_screen.dart                # ring draws in, wordmark settles, then onboarding or Home (~1.5 s)
+│   ├── onboarding_screen.dart            # first launch only: one purchase / three techniques / private by design
 │   ├── home_screen.dart                  # presets (fill the pickers) + technique/length pickers + Begin
 │   ├── session_screen.dart                # owns the real Ticker driving SessionController.tick; ring + plain-text phase label
 │   └── settings_screen.dart                # sound/haptics toggles, one-purchase statement, privacy statement
@@ -64,7 +68,16 @@ lib/
 
 assets/
 ├── animations/                     # empty until real Lottie compositions exist (golden rule 7)
-└── fonts/                          # Geist (OFL) — bundled, never fetched (golden rule 4)
+├── audio/chime.wav                 # synthesised by hand (numpy), see git history — no third-party sample
+├── fonts/                          # Geist (OFL) — bundled, never fetched (golden rule 4)
+└── icon/app_icon.png               # rendered by tool/make_icon.py; `dart run flutter_launcher_icons` regenerates sets
+
+tool/
+├── make_icon.py                    # app icon + iOS launch mark, pure PIL
+└── compose_screenshots.py          # captioned 6.9" App Store screenshots from build/screenshots/
+
+fastlane/                           # test / build / upload / listing lanes (see Fastfile header)
+docs/                               # GitHub Pages: landing, support, privacy policy
 
 test/
 ├── session_controller_test.dart    # phase advancement, pause/resume, completion, reset
@@ -100,7 +113,7 @@ integration_test/screens_test.dart  # Home → Session → Settings on a simulat
 3. Confirm `flutter analyze` is clean and `flutter test` passes against the scaffolded `session_controller_test.dart` and `breathing_technique_test.dart` before adding anything new.
 4. Source or commission the three real Lottie compositions (`inhale.json`, `hold.json`, `exhale.json`) into `assets/animations/` — until then, the app runs correctly on the plain-circle fallback (golden rule 7), so this can happen in parallel with everything else.
 5. Manual pass on `HomeScreen` → `SessionScreen` → `SettingsScreen` navigation and the pause/resume/reset flow on a real simulator (the countdown and phase timing need to be felt, not just unit-tested).
-6. Sound (a soft chime on phase change) and haptics (`HapticFeedback.lightImpact()` on phase change) — currently toggleable in Settings but not yet wired to anything; wire them up.
+6. ~~Sound and haptics~~ — done: `PhaseFeedback` plays the bundled chime and a light haptic on phase change; toggles persist via `AppSettings`.
 7. Set the app's price in App Store Connect when submitting — this is a store-listing decision, not a code change (golden rule 1).
 8. Accessibility pass — Dynamic Type on all text, VoiceOver labels on the animation region (announce the phase label, not the animation), sufficient contrast in both light and dark themes.
 

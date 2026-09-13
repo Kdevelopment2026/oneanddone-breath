@@ -92,3 +92,53 @@ base = Image.alpha_composite(base, arc)
 OUT.parent.mkdir(parents=True, exist_ok=True)
 base.convert("RGB").resize((S, S), Image.LANCZOS).save(OUT)
 print(f"wrote {OUT}")
+
+
+# --- Launch mark -----------------------------------------------------------
+# The ring alone on a transparent background, for the iOS launch screen
+# (ios/Runner/Assets.xcassets/LaunchImage.imageset). Base size 140pt.
+def launch_mark(size_pt, scale):
+    n = size_pt * scale * SS
+    img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    cc = n / 2
+    rr = n * 0.42
+    rdisc = rr * 0.66
+    yy2, xx2 = np.mgrid[0:n, 0:n].astype(np.float32)
+    dd = np.sqrt((xx2 - cc) ** 2 + (yy2 - cc) ** 2) / rdisc
+    tt2 = np.clip(dd, 0, 1)[..., None]
+    col = np.array(DISC_IN, np.float32) * (1 - tt2) + np.array(DISC_OUT, np.float32) * tt2
+    disc_img = Image.fromarray(np.dstack([np.clip(col, 0, 255).astype(np.uint8), (dd <= 1).astype(np.uint8) * 255]), "RGBA")
+    glow_img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    ImageDraw.Draw(glow_img).ellipse([cc - rr * 0.9, cc - rr * 0.9, cc + rr * 0.9, cc + rr * 0.9], fill=TEAL + (90,))
+    img = Image.alpha_composite(img, glow_img.filter(ImageFilter.GaussianBlur(n * 0.08)))
+    img = Image.alpha_composite(img, disc_img)
+    lines_img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    ld2 = ImageDraw.Draw(lines_img)
+    ld2.ellipse([cc - rdisc, cc - rdisc, cc + rdisc, cc + rdisc], outline=(255, 255, 255, 28), width=max(1, int(n * 0.003)))
+    ld2.ellipse([cc - rr, cc - rr, cc + rr, cc + rr], outline=(255, 255, 255, 30), width=max(1, int(n * 0.006)))
+    img = Image.alpha_composite(img, lines_img)
+    arc_img = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    ad2 = ImageDraw.Draw(arc_img)
+    w2 = max(2, int(n * 0.022))
+    for i in range(steps):
+        a0 = start + sweep * i / steps
+        a1 = start + sweep * (i + 1) / steps + 0.6
+        k = i / steps
+        col2 = tuple(int(MINT[j] * (1 - k) + TEAL[j] * k) for j in range(3))
+        ad2.arc([cc - rr, cc - rr, cc + rr, cc + rr], a0, a1, fill=col2 + (255,), width=w2)
+    for ang, col2 in ((start, MINT), (start + sweep, TEAL)):
+        x = cc + rr * math.cos(math.radians(ang))
+        y = cc + rr * math.sin(math.radians(ang))
+        ad2.ellipse([x - w2 / 2, y - w2 / 2, x + w2 / 2, y + w2 / 2], fill=col2 + (255,))
+    halo2 = arc_img.filter(ImageFilter.GaussianBlur(n * 0.02))
+    halo2 = Image.fromarray((np.array(halo2) * np.array([1, 1, 1, 0.75])).astype(np.uint8), "RGBA")
+    img = Image.alpha_composite(img, halo2)
+    img = Image.alpha_composite(img, arc_img)
+    return img.resize((size_pt * scale, size_pt * scale), Image.LANCZOS)
+
+
+LAUNCH = Path(__file__).resolve().parent.parent / "ios" / "Runner" / "Assets.xcassets" / "LaunchImage.imageset"
+for scale, suffix in ((1, ""), (2, "@2x"), (3, "@3x")):
+    path = LAUNCH / f"LaunchImage{suffix}.png"
+    launch_mark(140, scale).save(path)
+    print(f"wrote {path}")

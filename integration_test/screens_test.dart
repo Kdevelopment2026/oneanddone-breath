@@ -20,9 +20,23 @@ void main() {
     await tester.pumpWidget(const OneAndDoneBreathApp());
     // The aurora backdrop animates forever, so pumpAndSettle would never
     // return — pump fixed durations instead.
-    await settle(tester);
+    await settle(tester, frames: 4);
     await binding.convertFlutterSurfaceToImage();
     await settle(tester, frames: 2);
+    await binding.takeScreenshot('splash');
+    await settle(tester, frames: 8);
+
+    // First launch on a fresh simulator: onboarding, then Home.
+    if (find.text('Skip').evaluate().isNotEmpty) {
+      await binding.takeScreenshot('onboarding');
+      await tester.tap(find.text('Continue'));
+      await settle(tester, frames: 4);
+      await tester.tap(find.text('Continue'));
+      await settle(tester, frames: 4);
+      await tester.tap(find.text('Begin'));
+      await settle(tester);
+    }
+    expect(find.text('Ready when\nyou are.'), findsOneWidget);
     await binding.takeScreenshot('home');
 
     await tester.tap(find.text('Begin'));

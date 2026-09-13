@@ -24,6 +24,7 @@ SHOTS = [
     ("session", "A guide you can\nfollow without thinking.", "Breathe in, hold, breathe out — always in plain words."),
     ("session_paused", "Life happens.\nPause. Resume.", "Leave the app and your session waits for you."),
     ("settings", "Nothing collected.\nNothing to protect.", "No analytics, no cloud, no tracking. Works offline."),
+    ("onboarding", "Own it outright.", "One purchase. Every technique. Forever."),
 ]
 
 
