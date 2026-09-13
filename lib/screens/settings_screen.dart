@@ -36,8 +36,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const ListTile(
             title: Text('One purchase, nothing else'),
             subtitle: Text(
-              'OneAndDone Breath is a single one-time purchase. No subscription, '
-              'no account, no recurring charge — ever.',
+              'You already own this outright — the price you paid to download '
+              'OneAndDone Breath is the only charge there ever is. No subscription, '
+              'no account, no in-app purchase, no recurring charge.',
             ),
           ),
           const Divider(),

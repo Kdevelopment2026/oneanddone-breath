@@ -49,7 +49,7 @@ This came out of the wider iOS market-research pass on 10 breakout indie apps (s
 
 - **Flutter + Dart**, matching your existing Flutter portfolio convention (see the `Flutter` project in this same folder) — plain `ChangeNotifier` controllers, no external state-management package, Material 3 via `ColorScheme.fromSeed`.
 - **Lottie** — the breathing-phase animations, as requested. **Important:** no actual `.json` animation files ship with this scaffold — `assets/animations/` is empty. `BreathingAnimation` (in `lib/widgets/`) tries to load `inhale.json` / `hold.json` / `exhale.json` and falls back to a plain scaling circle built from stock Flutter widgets if a file is missing, so the app is fully usable today. Sourcing or commissioning the real Lottie compositions (LottieFiles.com has both free and paid breathing/circle animations, or a designer could build custom ones) is separate, trackable work — see `CLAUDE.md`.
-- No third-party state or backend packages. `in_app_purchase` is intentionally **not yet added** — see Monetisation below.
+- No third-party state or backend packages. No `in_app_purchase` package either — the app is sold as a paid download, not gated by an in-app purchase — see Monetisation below.
 
 ## Offline behaviour
 
@@ -63,7 +63,9 @@ Zero network requests. Every feature works permanently in airplane mode.
 
 ## Monetisation
 
-A single one-time purchase (price TBD), unlocking the entire app — there is no free tier and no in-app purchase beyond the one unlock, because a second purchase inside a "one and done" app would undercut its own premise. `PurchaseStatus` (in `lib/purchase/`) ships hard-coded unlocked in v1, mirroring the `ProStatus` pattern used across the native portfolio (Ballast, QuietCheck, StorageSense) — wiring up the real purchase means adding the `in_app_purchase` package and replacing the hard-coded value, not before.
+**OneAndDone Breath is sold as a paid app, not a free download with an in-app purchase.** The one-time price (TBD) is set once in App Store Connect, at submission — that single App Store transaction *is* the purchase. This is deliberately not an in-app-unlock model: there's no `in_app_purchase` package, no paywall screen, no purchase stream to listen to, and no "restore purchases" button to build, because Apple already handles all of that at the store level for a paid app (re-downloads, family sharing if enabled, and account transfers all just work, the same way they do for any paid app). There is nothing in this codebase that gates a feature behind a purchase, because there's no feature-gating decision to make — either someone has the app or they don't.
+
+If this ever needs to change (e.g. switching to free-with-IAP for better discoverability), that's a real architectural decision to make deliberately, not a default — see `CLAUDE.md`, golden rule 1.
 
 ## Roadmap (not v1)
 
