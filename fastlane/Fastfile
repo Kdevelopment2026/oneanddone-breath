@@ -375,6 +375,50 @@ platform :ios do
     end
   end
 
+  desc "Set the paid-app price. PRICE is the USD customer price (default 4.99); Apple derives the other territories"
+  lane :set_price do
+    require "spaceship"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    wanted = ENV.fetch("PRICE", "4.99")
+    points = asc(:get, "/v1/apps/#{app.id}/appPricePoints?filter[territory]=USA&limit=200")["data"]
+    point = points.find { |p| p.dig("attributes", "customerPrice") == wanted } ||
+            UI.user_error!("No USA price point for #{wanted}. First few: #{points.map { |p| p.dig('attributes', 'customerPrice') }.first(12).join(', ')}")
+    asc(:post, "/v1/appPriceSchedules", {
+      data: { type: "appPriceSchedules",
+              relationships: {
+                app: { data: { type: "apps", id: app.id } },
+                baseTerritory: { data: { type: "territories", id: "USA" } },
+                manualPrices: { data: [{ type: "appPrices", id: "${price1}" }] }
+              } },
+      included: [{ type: "appPrices", id: "${price1}",
+                   relationships: { appPricePoint: { data: { type: "appPricePoints", id: point["id"] } } } }]
+    })
+    UI.success("price set: USD #{wanted}")
+  end
+
+  desc "Submit the editable version for App Review (build attached, price and privacy label set first)"
+  lane :submit do
+    require "spaceship"
+    authenticate
+    app = Spaceship::ConnectAPI::App.find(APP_BUNDLE_ID) || UI.user_error!("No app record")
+    version = app.get_edit_app_store_version || UI.user_error!("No editable version")
+    UI.user_error!("No build attached: run `fastlane ios attach_build` first") if version.build.nil?
+    deliver(
+      app_version: version.version_string,
+      skip_metadata: true,
+      skip_screenshots: true,
+      skip_binary_upload: true,
+      submit_for_review: true,
+      automatic_release: false,
+      submission_information: {
+        add_id_info_uses_idfa: false,
+        export_compliance_uses_encryption: false
+      }
+    )
+    UI.success("Submitted #{version.version_string} (build #{version.build.version}) for review")
+  end
+
   desc "Read the listing back from App Store Connect"
   lane :qa do
     require "spaceship"

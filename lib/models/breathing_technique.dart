@@ -60,7 +60,7 @@ class BreathingTechnique {
     id: 'box',
     name: 'Box breathing',
     shortName: 'Box',
-    description: 'Four equal steps — in, hold, out, hold. A steady, general-purpose reset.',
+    description: 'Four equal steps: in, hold, out, hold. A steady, general purpose reset.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 4),
       BreathPhase(BreathPhaseType.holdAfterInhale, 4),
@@ -73,7 +73,7 @@ class BreathingTechnique {
     id: 'four_seven_eight',
     name: '4-7-8 breathing',
     shortName: '4-7-8',
-    description: 'A longer hold and a slow exhale — popularised for winding down before sleep.',
+    description: 'A longer hold and a slow exhale, popularised for winding down before sleep.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 4),
       BreathPhase(BreathPhaseType.holdAfterInhale, 7),
@@ -85,7 +85,7 @@ class BreathingTechnique {
     id: 'coherent',
     name: 'Coherent breathing',
     shortName: 'Coherent',
-    description: 'Even, unhurried in-and-out with no holds — the simplest place to start.',
+    description: 'Even, unhurried in and out with no holds. The simplest place to start.',
     phases: [
       BreathPhase(BreathPhaseType.inhale, 5.5),
       BreathPhase(BreathPhaseType.exhale, 5.5),

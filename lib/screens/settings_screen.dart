@@ -92,9 +92,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       title: const Text('One purchase, nothing else'),
                       subtitle: const Text(
-                        'You already own this outright — the price you paid to download '
+                        'You already own this outright. The price you paid to download '
                         'OneAndDone Breath is the only charge there ever is. No subscription, '
-                        'no account, no in-app purchase, no recurring charge.',
+                        'no account, no purchases inside the app, no recurring charge.',
                       ),
                     ),
                   ],
